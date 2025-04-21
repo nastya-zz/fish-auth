@@ -1,3 +1,4 @@
 /internal/config/
 /bin
 **/bin/
+.env

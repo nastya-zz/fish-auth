@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID        int64
+	ID        string
 	Name      string
 	Email     string
 	Role      string
@@ -23,7 +23,7 @@ type CreateUser struct {
 }
 
 type UpdateUser struct {
-	ID       int64
+	ID       string
 	Password string
 	Email    string
 }

@@ -11,5 +11,5 @@ type UserClaims struct {
 	jwt.StandardClaims
 	Name string `json:"name"`
 	Role string `json:"role"`
-	ID   int64  `json:"id"`
+	ID   string `json:"id"`
 }

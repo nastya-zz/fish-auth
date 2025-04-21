@@ -18,13 +18,15 @@ import (
 const (
 	tableName = "users"
 
-	idColumn        = "id"
-	nameColumn      = "name"
-	emailColumn     = "email"
-	passwordColumn  = "password"
-	roleColumn      = "role"
-	createdAtColumn = "created_at"
-	updatedAtColumn = "updated_at"
+	idColumn         = "id"
+	nameColumn       = "name"
+	emailColumn      = "email"
+	passwordColumn   = "password_hash"
+	roleColumn       = "role"
+	isVerifiedColumn = "is_verified"
+	lastLoginColumn  = "last_login"
+	createdAtColumn  = "created_at"
+	updatedAtColumn  = "updated_at"
 )
 
 type repo struct {
