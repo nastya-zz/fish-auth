@@ -18,7 +18,7 @@ func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*de
 
 	token, err := i.authService.Login(ctx, email, password)
 	if err != nil {
-		return nil, status.Errorf(codes.PermissionDenied, "user not found")
+		return nil, status.Errorf(codes.PermissionDenied, err.Error())
 	}
 
 	return &desc.LoginResponse{

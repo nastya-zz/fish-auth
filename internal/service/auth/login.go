@@ -15,7 +15,11 @@ func (s serv) Login(ctx context.Context, email string, password string) (string,
 		return "", fmt.Errorf(op+": %s, %s, %w", email, err)
 	}
 
-	equal := utils.VerifyPassword(user.Password, password)
+	if user.IsBlocked {
+		return "", errors.New("user has blocked")
+	}
+
+	equal := utils.CheckPasswordHash(user.Password, password)
 	if !equal {
 		return "", errors.New("passwords do not match")
 	}

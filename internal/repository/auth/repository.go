@@ -24,6 +24,7 @@ const (
 	passwordColumn   = "password_hash"
 	roleColumn       = "role"
 	isVerifiedColumn = "is_verified"
+	isBlockedColumn  = "is_blocked"
 	lastLoginColumn  = "last_login"
 	createdAtColumn  = "created_at"
 	updatedAtColumn  = "updated_at"
@@ -37,10 +38,10 @@ func NewRepository(db db.Client) repository.AuthRepository {
 	return &repo{db: db}
 }
 
-func (r repo) Get(ctx context.Context, id int64) (*model.User, error) {
+func (r repo) Get(ctx context.Context, id string) (*model.User, error) {
 	const op = "auth.Get"
 
-	builder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn).
+	builder := sq.Select(idColumn, nameColumn, emailColumn, roleColumn, createdAtColumn, updatedAtColumn, lastLoginColumn, isVerifiedColumn, isBlockedColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{idColumn: id}).
@@ -57,7 +58,7 @@ func (r repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	}
 
 	var user modelRepo.User
-	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.IsVerified, &user.IsBlocked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("cannot get user with id: %d", user.ID)
@@ -66,7 +67,7 @@ func (r repo) Get(ctx context.Context, id int64) (*model.User, error) {
 	return converter.ToUserFromRepo(&user), nil
 }
 
-func (r repo) Create(ctx context.Context, user *model.CreateUser) (int64, error) {
+func (r repo) Create(ctx context.Context, user *model.CreateUser) (string, error) {
 	const op = "auth.Create"
 
 	builder := sq.Insert(tableName).
@@ -77,7 +78,7 @@ func (r repo) Create(ctx context.Context, user *model.CreateUser) (int64, error)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	q := db.Query{
@@ -85,11 +86,11 @@ func (r repo) Create(ctx context.Context, user *model.CreateUser) (int64, error)
 		QueryRaw: query,
 	}
 
-	var id int64
+	var id string
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
 		log.Println(err)
-		return 0, fmt.Errorf("error in create user %w", err)
+		return "", fmt.Errorf("error in create user %w", err)
 	}
 
 	log.Println("id:", id)
@@ -120,7 +121,7 @@ func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
 		QueryRaw: query,
 	}
 
-	var id int64
+	var id string
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Printf("error in update user with id: %s %d", err, id)
@@ -135,7 +136,7 @@ func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
 	return nil
 }
 
-func (r repo) Delete(ctx context.Context, id int64) error {
+func (r repo) Delete(ctx context.Context, id string) error {
 	const op = "auth.Delete"
 
 	builder := sq.Delete(tableName).PlaceholderFormat(sq.Dollar).Where(sq.Eq{idColumn: id})
@@ -161,7 +162,7 @@ func (r repo) Delete(ctx context.Context, id int64) error {
 func (r repo) Login(ctx context.Context, email string) (*model.User, error) {
 	const op = "auth.Login"
 
-	builder := sq.Select(idColumn, nameColumn, roleColumn, passwordColumn).
+	builder := sq.Select(idColumn, nameColumn, roleColumn, passwordColumn, isBlockedColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{emailColumn: email}).
@@ -177,7 +178,7 @@ func (r repo) Login(ctx context.Context, email string) (*model.User, error) {
 	}
 
 	var user modelRepo.User
-	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&user.ID, &user.Name, &user.Role, &user.Password)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&user.ID, &user.Name, &user.Role, &user.Password, &user.IsBlocked)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("cannot get user with email: %s", email)
@@ -185,4 +186,37 @@ func (r repo) Login(ctx context.Context, email string) (*model.User, error) {
 	}
 
 	return converter.ToUserFromRepo(&user), nil
+}
+
+func (r repo) Block(ctx context.Context, id string) error {
+	const op = "auth.Block"
+
+	builder := sq.Update(idColumn).
+		PlaceholderFormat(sq.Dollar).
+		From(tableName).
+		Where(sq.Eq{id: id})
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     op,
+		QueryRaw: query,
+	}
+
+	var deletedId string
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&deletedId)
+	if errors.Is(err, pgx.ErrNoRows) {
+		log.Printf("error in delete user with id: %s %d", err, id)
+
+		return fmt.Errorf("cannot delete user with id: %d", id)
+	}
+	if err != nil {
+		log.Printf("error in delete user with id: %s", err)
+		return fmt.Errorf("cannot delete user %w", err)
+	}
+
+	return nil
 }

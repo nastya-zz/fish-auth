@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (s *Implementation) Create(ctx context.Context, req *desc.CreateUserRequest) (*desc.CreateUserResponse, error) {
+func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserRequest) (*desc.CreateUserResponse, error) {
 	log.Printf("Received user CreateRequest %+v", req.GetUserInfo())
 
 	errors := validateCreateUserRequest(req)
@@ -21,7 +21,7 @@ func (s *Implementation) Create(ctx context.Context, req *desc.CreateUserRequest
 	}
 	preparedUser := converter.ToCreateUserFromDesc(req.GetUserInfo())
 
-	id, err := s.authService.Create(ctx, preparedUser)
+	id, err := i.authService.Create(ctx, preparedUser)
 
 	log.Printf("Created user with id %d", id)
 

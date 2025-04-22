@@ -6,13 +6,16 @@ import (
 )
 
 type User struct {
-	ID        string
-	Name      string
-	Email     string
-	Role      string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt sql.NullTime
+	ID         string
+	Name       string
+	Email      string
+	Role       string
+	Password   string
+	IsVerified bool
+	IsBlocked  bool
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	LastLogin  sql.NullTime
 }
 
 type CreateUser struct {
