@@ -24,7 +24,6 @@ type serviceProvider struct {
 	authRepository repository.AuthRepository
 
 	authService service.AuthService
-	userService service.UserService
 
 	authImpl *auth.Implementation
 }
