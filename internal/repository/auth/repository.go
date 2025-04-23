@@ -191,8 +191,9 @@ func (r repo) Login(ctx context.Context, email string) (*model.User, error) {
 func (r repo) Block(ctx context.Context, id string) error {
 	const op = "auth.Block"
 
-	builder := sq.Update(idColumn).
+	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
+		Set(isBlockedColumn, true).
 		From(tableName).
 		Where(sq.Eq{id: id})
 
