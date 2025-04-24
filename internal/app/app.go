@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
+	"time"
 )
 
 type App struct {
@@ -38,6 +39,8 @@ func (a *App) Run() error {
 		closer.CloseAll()
 		closer.Wait()
 	}()
+
+	a.runEventSender()
 
 	return a.runGRPCServer()
 }
@@ -97,4 +100,9 @@ func (a *App) runGRPCServer() error {
 	}
 
 	return nil
+}
+
+func (a *App) runEventSender() {
+	ctx := context.Background()
+	a.serviceProvider.eventService.StartProcessEvents(ctx, 10*time.Second)
 }

@@ -67,18 +67,18 @@ func (r repo) Get(ctx context.Context, id string) (*model.User, error) {
 	return converter.ToUserFromRepo(&user), nil
 }
 
-func (r repo) Create(ctx context.Context, user *model.CreateUser) (string, error) {
+func (r repo) Create(ctx context.Context, user *model.CreateUser) (*model.User, error) {
 	const op = "auth.Create"
 
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(emailColumn, nameColumn, passwordColumn, roleColumn).
 		Values(user.Email, user.Name, user.Password, user.Role).
-		Suffix("RETURNING id")
+		Suffix("RETURNING *")
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	q := db.Query{
@@ -86,15 +86,17 @@ func (r repo) Create(ctx context.Context, user *model.CreateUser) (string, error
 		QueryRaw: query,
 	}
 
-	var id string
-	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
+	var createdUser modelRepo.User
+	err = r.db.DB().
+		QueryRowContext(ctx, q, args...).
+		Scan(&createdUser.ID, &createdUser.Name, &createdUser.Email, &createdUser.Role, &createdUser.Password, &createdUser.IsVerified, &createdUser.CreatedAt, &createdUser.UpdatedAt, &createdUser.LastLogin, &createdUser.IsBlocked)
 	if err != nil {
 		log.Println(err)
-		return "", fmt.Errorf("error in create user %w", err)
+		return nil, fmt.Errorf("error in create user %w", err)
 	}
 
-	log.Println("id:", id)
-	return id, nil
+	log.Println("createdUser:", createdUser)
+	return converter.ToUserFromRepo(&createdUser), nil
 }
 
 func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {

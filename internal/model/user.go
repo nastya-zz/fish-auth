@@ -5,14 +5,14 @@ import (
 )
 
 type User struct {
-	ID         string
-	Name       string
-	Email      string
-	Role       string
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Role       string `json:"role"`
 	Password   string
-	IsVerified bool
+	IsVerified bool `json:"isVerified"`
 	IsBlocked  bool
-	CreatedAt  time.Time
+	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time
 	LastLogin  time.Time
 }
@@ -28,4 +28,12 @@ type UpdateUser struct {
 	ID       string
 	Password string
 	Email    string
+}
+
+type UserPublish struct {
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	IsVerified bool      `json:"isVerified"`
+	CreatedAt  time.Time `json:"createdAt"`
 }

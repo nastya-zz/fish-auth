@@ -1,0 +1,62 @@
+package rabbitmq
+
+import (
+	"auth/internal/client/broker"
+	"auth/internal/model"
+	"bytes"
+	"context"
+	"encoding/gob"
+	"fmt"
+	"github.com/streadway/amqp"
+	"time"
+)
+
+type Broker struct {
+	ch *amqp.Channel
+}
+
+func NewBroker(channel *amqp.Channel) broker.UserMsgBroker {
+	return &Broker{
+		ch: channel,
+	}
+}
+
+func (t Broker) Created(ctx context.Context, event model.Event) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t Broker) Deleted(ctx context.Context, event model.Event) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t Broker) Updated(ctx context.Context, event model.Event) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t Broker) publish(_ context.Context, routingKey string, event *model.Event) error {
+	const op = "broker.publish"
+	var b bytes.Buffer
+
+	if err := gob.NewEncoder(&b).Encode(event); err != nil {
+		return fmt.Errorf("could not encode event: %w", err)
+	}
+	err := t.ch.Publish(
+		"user_events", // exchange
+		routingKey,    // routing key
+		false,         // mandatory
+		false,         // immediate
+		amqp.Publishing{
+			AppId:       "auth_grpc_server",
+			ContentType: "application/x-encoding-gob",
+			Body:        b.Bytes(),
+			Timestamp:   time.Now(),
+		})
+	if err != nil {
+		return fmt.Errorf("could not publish: %s, %w", op, err)
+	}
+
+	return nil
+}

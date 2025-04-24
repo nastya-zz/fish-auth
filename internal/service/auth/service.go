@@ -8,8 +8,10 @@ import (
 )
 
 type serv struct {
-	authRepository repository.AuthRepository
-	txManager      db.TxManager
+	authRepository  repository.AuthRepository
+	eventRepository repository.EventRepository
+	eventService    service.EventService
+	txManager       db.TxManager
 }
 
 func (s serv) Check(ctx context.Context, endpoint string) (bool, error) {
@@ -19,10 +21,14 @@ func (s serv) Check(ctx context.Context, endpoint string) (bool, error) {
 
 func NewService(
 	authRepository repository.AuthRepository,
+	eventRepository repository.EventRepository,
+	eventService service.EventService,
 	txManager db.TxManager,
 ) service.AuthService {
 	return &serv{
-		authRepository: authRepository,
-		txManager:      txManager,
+		authRepository:  authRepository,
+		eventRepository: eventRepository,
+		eventService:    eventService,
+		txManager:       txManager,
 	}
 }

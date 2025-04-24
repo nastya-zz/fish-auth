@@ -3,6 +3,7 @@ package service
 import (
 	"auth/internal/model"
 	"context"
+	"time"
 )
 
 type AuthService interface {
@@ -12,4 +13,9 @@ type AuthService interface {
 	Create(ctx context.Context, user *model.CreateUser) (string, error)
 	Check(ctx context.Context, endpoint string) (bool, error)
 	BlockUser(ctx context.Context, id string) (string, error)
+}
+
+type EventService interface {
+	StartProcessEvents(ctx context.Context, handlePeriod time.Duration)
+	SendMessage(ctx context.Context, event *model.Event)
 }

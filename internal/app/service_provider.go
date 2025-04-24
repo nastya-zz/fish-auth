@@ -8,8 +8,10 @@ import (
 	"auth/internal/config"
 	"auth/internal/repository"
 	authRepository "auth/internal/repository/auth"
+	eventRepository "auth/internal/repository/event"
 	"auth/internal/service"
 	authService "auth/internal/service/auth"
+	eventService "auth/internal/service/event"
 	"auth/internal/transaction"
 	"context"
 	"log"
@@ -19,11 +21,13 @@ type serviceProvider struct {
 	pgConfig   config.PGConfig
 	grpcConfig config.GRPCConfig
 
-	dbClient       db.Client
-	txManager      db.TxManager
-	authRepository repository.AuthRepository
+	dbClient        db.Client
+	txManager       db.TxManager
+	authRepository  repository.AuthRepository
+	eventRepository repository.EventRepository
 
-	authService service.AuthService
+	authService  service.AuthService
+	eventService service.EventService
 
 	authImpl *auth.Implementation
 }
@@ -93,10 +97,30 @@ func (s *serviceProvider) AuthRepository(ctx context.Context) repository.AuthRep
 	return s.authRepository
 }
 
+func (s *serviceProvider) EventRepository(ctx context.Context) repository.EventRepository {
+	if s.eventRepository == nil {
+		s.eventRepository = eventRepository.NewRepository(s.DBClient(ctx))
+	}
+
+	return s.eventRepository
+}
+
+func (s *serviceProvider) EventService(ctx context.Context) service.EventService {
+	if s.eventService == nil {
+		s.eventService = eventService.NewService(
+			s.EventRepository(ctx),
+		)
+	}
+
+	return s.eventService
+}
+
 func (s *serviceProvider) AuthService(ctx context.Context) service.AuthService {
 	if s.authService == nil {
 		s.authService = authService.NewService(
 			s.AuthRepository(ctx),
+			s.EventRepository(ctx),
+			s.EventService(ctx),
 			s.TxManager(ctx),
 		)
 	}
