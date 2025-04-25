@@ -11,6 +11,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/nastya-zz/fisher-protocols v0.0.1
 	github.com/pkg/errors v0.9.1
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/streadway/amqp v1.1.0
 	golang.org/x/crypto v0.37.0
 	google.golang.org/grpc v1.71.1

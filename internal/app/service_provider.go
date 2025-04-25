@@ -2,6 +2,8 @@ package app
 
 import (
 	"auth/internal/api/auth"
+	"auth/internal/client/broker"
+	"auth/internal/client/broker/rabbitmq"
 	"auth/internal/client/db"
 	"auth/internal/client/db/pg"
 	"auth/internal/closer"
@@ -20,7 +22,9 @@ import (
 type serviceProvider struct {
 	pgConfig   config.PGConfig
 	grpcConfig config.GRPCConfig
+	rmqConfig  config.RMQConfig
 
+	rmqClient       broker.ClientMsgBroker
 	dbClient        db.Client
 	txManager       db.TxManager
 	authRepository  repository.AuthRepository
@@ -28,6 +32,7 @@ type serviceProvider struct {
 
 	authService  service.AuthService
 	eventService service.EventService
+	eventBroker  service.UserMsgBroker
 
 	authImpl *auth.Implementation
 }
@@ -47,6 +52,19 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	}
 
 	return s.pgConfig
+}
+
+func (s *serviceProvider) RMQConfig() config.RMQConfig {
+	if s.rmqConfig == nil {
+		cfg, err := config.NewRMQConfig()
+		if err != nil {
+			log.Fatalf("failed to get rmqConfig : %s", err.Error())
+		}
+
+		s.rmqConfig = cfg
+	}
+
+	return s.rmqConfig
 }
 
 func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
@@ -81,6 +99,21 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) RabbitMQClient(ctx context.Context) broker.ClientMsgBroker {
+	if s.rmqClient == nil {
+		cl, err := rabbitmq.NewRabbitMQ(ctx, s.RMQConfig().DSN())
+		if err != nil {
+			log.Fatalf("failed to create rmq client: %v", err)
+		}
+
+		closer.Add(cl.Close)
+
+		s.rmqClient = cl
+	}
+
+	return s.rmqClient
+}
+
 func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 	if s.txManager == nil {
 		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
@@ -105,10 +138,20 @@ func (s *serviceProvider) EventRepository(ctx context.Context) repository.EventR
 	return s.eventRepository
 }
 
+func (s *serviceProvider) EventBroker(ctx context.Context) service.UserMsgBroker {
+	if s.eventBroker == nil {
+		con := s.RabbitMQClient(ctx).Connect()
+		s.eventBroker = eventService.NewBroker(con.Channel)
+	}
+
+	return s.eventBroker
+}
+
 func (s *serviceProvider) EventService(ctx context.Context) service.EventService {
 	if s.eventService == nil {
 		s.eventService = eventService.NewService(
 			s.EventRepository(ctx),
+			s.EventBroker(ctx),
 		)
 	}
 

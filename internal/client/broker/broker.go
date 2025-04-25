@@ -1,12 +1,8 @@
 package broker
 
-import (
-	"auth/internal/model"
-	"context"
-)
+import "auth/internal/client/broker/rabbitmq"
 
-type UserMsgBroker interface {
-	Created(ctx context.Context, event model.Event) error
-	Deleted(ctx context.Context, event model.Event) error
-	Updated(ctx context.Context, event model.Event) error
+type ClientMsgBroker interface {
+	Connect() *rabbitmq.RabbitMQ
+	Close() error
 }

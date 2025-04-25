@@ -15,7 +15,17 @@ type AuthService interface {
 	BlockUser(ctx context.Context, id string) (string, error)
 }
 
-type EventService interface {
+type ProcessEvent interface {
 	StartProcessEvents(ctx context.Context, handlePeriod time.Duration)
 	SendMessage(ctx context.Context, event *model.Event)
+}
+
+type UserMsgBroker interface {
+	Created(ctx context.Context, event *model.Event) error
+	Deleted(ctx context.Context, event *model.Event) error
+	Updated(ctx context.Context, event *model.Event) error
+}
+
+type EventService interface {
+	ProcessEvent
 }
