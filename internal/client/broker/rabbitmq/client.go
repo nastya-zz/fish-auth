@@ -6,6 +6,10 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+const (
+	QueueName = "user"
+)
+
 type RabbitMQ struct {
 	Connection *amqp.Connection
 	Channel    *amqp.Channel
@@ -23,17 +27,10 @@ func NewRabbitMQ(ctx context.Context, url string) (*RabbitMQ, error) {
 		return nil, fmt.Errorf("error connection %s: %w", "conn.Channel", err)
 	}
 
-	err = channel.ExchangeDeclare(
-		"user_events", // name
-		"topic",       // type
-		true,          // durable
-		false,         // auto-deleted
-		false,         // internal
-		false,         // no-wait
-		nil,           // arguments
-	)
+	_, err = channel.QueueDeclare(QueueName, true, false, false, false, nil)
+
 	if err != nil {
-		return nil, fmt.Errorf("error connection  %s: %w", "ch.ExchangeDeclare", err)
+		return nil, fmt.Errorf("error create queue  %s: %w", "ch.QueueDeclare", err)
 	}
 
 	if err = channel.Qos(

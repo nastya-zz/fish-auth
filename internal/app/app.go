@@ -34,13 +34,13 @@ func NewApp(ctx context.Context) (*App, error) {
 	return a, nil
 }
 
-func (a *App) Run() error {
+func (a *App) Run(ctx context.Context) error {
 	defer func() {
 		closer.CloseAll()
 		closer.Wait()
 	}()
 
-	a.runEventSender()
+	a.runEventSender(ctx)
 
 	return a.runGRPCServer()
 }
@@ -102,7 +102,6 @@ func (a *App) runGRPCServer() error {
 	return nil
 }
 
-func (a *App) runEventSender() {
-	ctx := context.Background()
+func (a *App) runEventSender(ctx context.Context) {
 	a.serviceProvider.eventService.StartProcessEvents(ctx, 10*time.Second)
 }

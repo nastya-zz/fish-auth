@@ -1,6 +1,7 @@
 package event
 
 import (
+	"auth/internal/client/broker/rabbitmq"
 	"auth/internal/model"
 	"auth/internal/service"
 	"bytes"
@@ -22,7 +23,7 @@ func NewBroker(channel *amqp.Channel) service.UserMsgBroker {
 }
 
 func (s Broker) Created(ctx context.Context, event *model.Event) error {
-	return s.publish(ctx, "User.Created", event)
+	return s.publish(ctx, rabbitmq.QueueName, event)
 }
 
 func (s *Broker) Deleted(ctx context.Context, event *model.Event) error {
@@ -43,10 +44,10 @@ func (s Broker) publish(_ context.Context, routingKey string, event *model.Event
 		return fmt.Errorf("could not encode event: %w", err)
 	}
 	err := s.ch.Publish(
-		"user_events", // exchange
-		routingKey,    // routing key
-		false,         // mandatory
-		false,         // immediate
+		"",         // exchange
+		routingKey, // routing key
+		false,      // mandatory
+		false,      // immediate
 		amqp.Publishing{
 			AppId:       "auth_grpc_server",
 			ContentType: "application/x-encoding-gob",
