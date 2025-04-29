@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4"
+	pgx "github.com/jackc/pgx/v4"
 	"log"
 	"time"
 )
