@@ -22,7 +22,7 @@ func (s serv) Create(ctx context.Context, user *model.CreateUser) (string, error
 	err = s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
 		var errTx error
 		createdUser, errTx := s.authRepository.Create(ctx, user)
-		if err != nil {
+		if errTx != nil {
 			return errTx
 		}
 		id = createdUser.ID
@@ -35,7 +35,7 @@ func (s serv) Create(ctx context.Context, user *model.CreateUser) (string, error
 			CreatedAt:  createdUser.CreatedAt,
 		})
 
-		if err != nil {
+		if errTx != nil {
 			return fmt.Errorf("error in marshal json body %w", errTx)
 		}
 
