@@ -2,6 +2,7 @@ package auth
 
 import (
 	"auth/internal/converter"
+	errorsMsg "auth/pkg/api-errors-msg"
 	"context"
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
@@ -17,18 +18,18 @@ func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserReq
 	if len(errors) > 0 {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
-			strings.Join(errors, ","))
+			strings.Join(errors, ", "))
 	}
 	preparedUser := converter.ToCreateUserFromDesc(req.GetUserInfo())
 
 	id, err := i.authService.Create(ctx, preparedUser)
 
-	log.Printf("Created user with id %d", id)
+	log.Printf("Created user with id %s", id)
 
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			"User creation failed")
+			errorsMsg.UserCreationFailed)
 
 	}
 
@@ -40,24 +41,24 @@ func validateCreateUserRequest(req *desc.CreateUserRequest) []string {
 	var errors = make([]string, 0)
 
 	if user == nil {
-		errors = append(errors, "User creation failed")
+		errors = append(errors, errorsMsg.UserCreationFailed)
 		return errors
 	}
 	if user.GetName() == "" {
-		errors = append(errors, "User name cannot be empty")
+		errors = append(errors, errorsMsg.UsernameInvalid)
 	}
 	if user.GetEmail() == "" {
-		errors = append(errors, "User email cannot be empty")
+		errors = append(errors, errorsMsg.UserEmailInvalid)
 	}
 	if user.GetPassword() == "" {
-		errors = append(errors, "User password cannot be empty")
+		errors = append(errors, errorsMsg.UserPasswordInvalid)
 	}
 
 	password := user.GetPassword()
 	confirmPass := user.GetPasswordConfirm()
 
 	if password != confirmPass {
-		errors = append(errors, "User passwords do not match")
+		errors = append(errors, errorsMsg.UserPasswordConfirmInvalid)
 	}
 
 	return errors
