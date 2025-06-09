@@ -26,12 +26,12 @@ func (s Broker) Created(ctx context.Context, event *model.Event) error {
 	return s.publish(ctx, rabbitmq.QueueName, event)
 }
 
-func (s *Broker) Deleted(ctx context.Context, event *model.Event) error {
+func (s Broker) Deleted(ctx context.Context, event *model.Event) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Broker) Updated(ctx context.Context, event *model.Event) error {
+func (s Broker) Updated(ctx context.Context, event *model.Event) error {
 	//TODO implement me
 	panic("implement me")
 }

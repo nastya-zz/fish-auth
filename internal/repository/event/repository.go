@@ -41,14 +41,14 @@ func NewRepository(db db.Client) repository.EventRepository {
 	return &repo{db: db}
 }
 
-func (r repo) GetNewEvent(ctx context.Context) (*model.Event, error) {
+func (r repo) GetNewEvent(ctx context.Context, count int) ([]*model.Event, error) {
 	const op = "db.GetNewEvent"
 
 	builder := sq.Select(idColumn, eventTypeColumn, payloadColumn).
 		PlaceholderFormat(sq.Dollar).
 		From(tableName).
 		Where(sq.Eq{statusColumn: newStatus}).
-		Limit(1)
+		Limit(uint64(count))
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -60,8 +60,8 @@ func (r repo) GetNewEvent(ctx context.Context) (*model.Event, error) {
 		QueryRaw: query,
 	}
 
-	var event model.Event
-	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&event.ID, &event.Type, &event.Payload)
+	var events []*model.Event
+	err = r.db.DB().ScanAllContext(ctx, &events, q, args...)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -70,11 +70,7 @@ func (r repo) GetNewEvent(ctx context.Context) (*model.Event, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &model.Event{
-		ID:      event.ID,
-		Type:    event.Type,
-		Payload: event.Payload,
-	}, nil
+	return events, nil
 }
 
 func (r repo) SaveEvent(ctx context.Context, event *model.Event) error {

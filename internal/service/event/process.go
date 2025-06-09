@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	eventBatchSize = 20
+)
+
 func (s *Sender) StartProcessEvents(ctx context.Context, handlePeriod time.Duration) {
 	const op = "services.event-sender.StartProcessEvents"
 
@@ -24,34 +28,36 @@ func (s *Sender) StartProcessEvents(ctx context.Context, handlePeriod time.Durat
 				// noop
 			}
 
-			event, err := s.eventRepository.GetNewEvent(ctx)
+			events, err := s.eventRepository.GetNewEvent(ctx, eventBatchSize)
 			if err != nil {
 				log.Error("failed to get new event", err)
 				continue
 			}
-			if event == nil {
+			if events == nil {
 				log.Debug("no new events")
 				continue
 			}
 
-			s.SendMessage(ctx, event)
-
-			if err := s.eventRepository.SetDone(ctx, event.ID); err != nil {
-				log.Error("failed to set event done", err)
-			}
+			s.SendMessage(ctx, events)
 		}
 	}()
 }
 
-func (s *Sender) SendMessage(ctx context.Context, event *model.Event) {
+func (s *Sender) SendMessage(ctx context.Context, events []*model.Event) {
 	const op = "services.event-sender.SendMessage"
 
-	log := slog.With(slog.String("op", op))
-	log.Info("sending message", slog.Any("event", event))
+	for _, event := range events {
+		log := slog.With(slog.String("op", op))
+		log.Info("sending message", slog.Any("event", event))
 
-	// TODO: implement sending message to the external service.
-	err := s.broker.Created(ctx, event)
-	if err != nil {
-		log.Error("failed to send message", err)
+		err := s.broker.Created(ctx, event)
+		if err != nil {
+			log.Error("failed to send message", err)
+		}
+
+		if err := s.eventRepository.SetDone(ctx, event.ID); err != nil {
+			log.Error("failed to set event done", err)
+		}
 	}
+
 }

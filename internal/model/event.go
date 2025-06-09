@@ -1,9 +1,9 @@
 package model
 
 type Event struct {
-	ID      int
-	Type    string
-	Payload []byte
+	ID      int    `db:"id"`
+	Type    string `db:"event_type"`
+	Payload []byte `db:"payload"`
 }
 
 const (

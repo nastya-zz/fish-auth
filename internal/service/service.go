@@ -14,11 +14,12 @@ type AuthService interface {
 	Create(ctx context.Context, user *model.CreateUser) (string, error)
 	Check(ctx context.Context, endpoint string) (bool, error)
 	BlockUser(ctx context.Context, id string) (string, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type ProcessEvent interface {
 	StartProcessEvents(ctx context.Context, handlePeriod time.Duration)
-	SendMessage(ctx context.Context, event *model.Event)
+	SendMessage(ctx context.Context, event []*model.Event)
 }
 
 type UserMsgBroker interface {

@@ -7,6 +7,11 @@ const (
 	ChatPath    = "/chat_v1.ChatV1/SendMessage"
 )
 
+const (
+	RoleAdmin = "ADMIN"
+	RoleUser  = "USER"
+)
+
 type UserClaims struct {
 	jwt.StandardClaims
 	Name string `json:"name"`

@@ -191,13 +191,12 @@ func (r repo) Login(ctx context.Context, email string) (*model.User, error) {
 }
 
 func (r repo) Block(ctx context.Context, id string) error {
-	const op = "auth.Block"
+	const op = "auth.BlockUser"
 
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Set(isBlockedColumn, true).
-		From(tableName).
-		Where(sq.Eq{id: id})
+		Where(sq.Eq{idColumn: id}).Suffix("RETURNING id")
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -212,13 +211,13 @@ func (r repo) Block(ctx context.Context, id string) error {
 	var deletedId string
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&deletedId)
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("error in delete user with id: %s %d", err, id)
+		log.Printf("error in block user with id: %s %d", err, id)
 
-		return fmt.Errorf("cannot delete user with id: %d", id)
+		return fmt.Errorf("cannot block user with id: %d", id)
 	}
 	if err != nil {
-		log.Printf("error in delete user with id: %s", err)
-		return fmt.Errorf("cannot delete user %w", err)
+		log.Printf("error in block user with id: %s", err)
+		return fmt.Errorf("cannot block user %w", err)
 	}
 
 	return nil
