@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"auth/internal/logger"
 	"auth/internal/model"
 	"auth/internal/utils"
 	"context"
@@ -9,10 +10,12 @@ import (
 )
 
 func (s serv) Create(ctx context.Context, user *model.CreateUser) (string, error) {
+	logger.Info("starting user creation", "email", user.Email, "role", user.Role)
 
 	password := user.Password
 	hash, err := utils.HashPassword(password)
 	if err != nil {
+		logger.Error("failed to hash password", "error", err, "email", user.Email)
 		return "", fmt.Errorf("failed to hash password: %w", err)
 	}
 
@@ -53,8 +56,10 @@ func (s serv) Create(ctx context.Context, user *model.CreateUser) (string, error
 	})
 
 	if err != nil {
+		logger.Error("transaction failed during user creation", "error", err, "email", user.Email)
 		return "", err
 	}
 
+	logger.Info("user created successfully", "user_id", id, "email", user.Email)
 	return id, nil
 }
