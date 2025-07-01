@@ -4,12 +4,12 @@ import (
 	"auth/internal/client/db"
 	"auth/internal/model"
 	"auth/internal/repository"
+	"auth/pkg/logger"
 	"context"
 	"errors"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
-	"log"
 )
 
 const (
@@ -95,7 +95,7 @@ func (r repo) SaveEvent(ctx context.Context, event *model.Event) error {
 	var savedId int
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&savedId)
 	if err != nil {
-		log.Println(err)
+		logger.Error("error in create event", "error", err)
 		return fmt.Errorf("error in create event %w", err)
 	}
 
@@ -104,7 +104,7 @@ func (r repo) SaveEvent(ctx context.Context, event *model.Event) error {
 
 func (r repo) SetDone(ctx context.Context, id int) error {
 	const op = "db.SetDone"
-	log.Printf("updating event %+v", id)
+	logger.Info("updating event", "id", id)
 
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
@@ -125,12 +125,12 @@ func (r repo) SetDone(ctx context.Context, id int) error {
 	var savedId int
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&savedId)
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("error in update event with id: %s %d", err, savedId)
+		logger.Error("error in update event with id", "error", err, "id", savedId)
 
 		return fmt.Errorf("cannot update event with id: %d", savedId)
 	}
 	if err != nil {
-		log.Printf("error in update event with id: %s", err)
+		logger.Error("error in update event with id", "error", err)
 		return fmt.Errorf("cannot update event %w", err)
 	}
 
