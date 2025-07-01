@@ -2,7 +2,7 @@ package main
 
 import (
 	"auth/internal/app"
-	"auth/internal/logger"
+	"auth/pkg/logger"
 	"context"
 )
 

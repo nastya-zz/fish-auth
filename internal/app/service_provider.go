@@ -8,7 +8,7 @@ import (
 	"auth/internal/client/db/pg"
 	"auth/internal/closer"
 	"auth/internal/config"
-	"auth/internal/logger"
+	"auth/pkg/logger"
 	"auth/internal/repository"
 	authRepository "auth/internal/repository/auth"
 	eventRepository "auth/internal/repository/event"

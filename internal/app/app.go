@@ -3,7 +3,7 @@ package app
 import (
 	"auth/internal/closer"
 	"auth/internal/config"
-	"auth/internal/logger"
+	"auth/pkg/logger"
 	"context"
 	descAuth "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc"

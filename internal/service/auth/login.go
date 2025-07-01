@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"auth/internal/logger"
+	"auth/pkg/logger"
 	"auth/internal/utils"
 	service_errors "auth/pkg/service-errors"
 	"context"

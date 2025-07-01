@@ -2,7 +2,7 @@ package auth
 
 import (
 	"auth/internal/client/db"
-	"auth/internal/logger"
+	"auth/pkg/logger"
 	"auth/internal/model"
 	"auth/internal/repository"
 	"auth/internal/repository/auth/converter"
