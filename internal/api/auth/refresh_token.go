@@ -2,12 +2,12 @@ package auth
 
 import (
 	"auth/internal/utils"
+	"auth/pkg/logger"
 	apierrors "auth/pkg/api-errors-msg"
 	"context"
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 )
 
 func (i *Implementation) GetRefreshToken(ctx context.Context, req *desc.GetRefreshTokenRequest) (*desc.GetRefreshTokenResponse, error) {
@@ -16,7 +16,7 @@ func (i *Implementation) GetRefreshToken(ctx context.Context, req *desc.GetRefre
 		return nil, status.Errorf(codes.Aborted, apierrors.AuthInvalidRefreshToken)
 	}
 
-	log.Printf("Claims %+v", claims)
+	logger.Info("Claims", "claims", claims)
 
 	user, err := i.authService.GetUser(ctx, claims.ID)
 	if err != nil {

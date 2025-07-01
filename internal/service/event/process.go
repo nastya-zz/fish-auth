@@ -2,8 +2,8 @@ package event
 
 import (
 	"auth/internal/model"
+	"auth/pkg/logger"
 	"context"
-	"log/slog"
 	"time"
 )
 
@@ -14,15 +14,13 @@ const (
 func (s *Sender) StartProcessEvents(ctx context.Context, handlePeriod time.Duration) {
 	const op = "services.event-sender.StartProcessEvents"
 
-	log := slog.With(slog.String("op", op))
-
 	ticker := time.NewTicker(handlePeriod)
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info("stopping event processing")
+				logger.Info("stopping event processing", "op", op)
 				return
 			case <-ticker.C:
 				// noop
@@ -30,11 +28,11 @@ func (s *Sender) StartProcessEvents(ctx context.Context, handlePeriod time.Durat
 
 			events, err := s.eventRepository.GetNewEvent(ctx, eventBatchSize)
 			if err != nil {
-				log.Error("failed to get new event", err)
+				logger.Error("failed to get new event", "error", err, "op", op)
 				continue
 			}
 			if events == nil {
-				log.Debug("no new events")
+				logger.Debug("no new events", "op", op)
 				continue
 			}
 
@@ -47,16 +45,15 @@ func (s *Sender) SendMessage(ctx context.Context, events []*model.Event) {
 	const op = "services.event-sender.SendMessage"
 
 	for _, event := range events {
-		log := slog.With(slog.String("op", op))
-		log.Info("sending message", slog.Any("event", event))
+		logger.Info("sending message", "event", event, "op", op)
 
 		err := s.broker.Created(ctx, event)
 		if err != nil {
-			log.Error("failed to send message", err)
+			logger.Error("failed to send message", "error", err, "op", op)
 		}
 
 		if err := s.eventRepository.SetDone(ctx, event.ID); err != nil {
-			log.Error("failed to set event done", err)
+			logger.Error("failed to set event done", "error", err, "op", op)
 		}
 	}
 

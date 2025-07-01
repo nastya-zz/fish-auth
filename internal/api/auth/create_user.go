@@ -2,17 +2,17 @@ package auth
 
 import (
 	"auth/internal/converter"
+	"auth/pkg/logger"
 	errorsMsg "auth/pkg/api-errors-msg"
 	"context"
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 	"strings"
 )
 
 func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserRequest) (*desc.CreateUserResponse, error) {
-	log.Printf("Received user CreateRequest %+v", req.GetUserInfo())
+	logger.Info("Received user CreateRequest", "user_info", req.GetUserInfo())
 
 	errors := validateCreateUserRequest(req)
 	if len(errors) > 0 {
@@ -24,7 +24,7 @@ func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserReq
 
 	id, err := i.authService.Create(ctx, preparedUser)
 
-	log.Printf("Created user with id %s", id)
+	logger.Info("Created user", "id", id)
 
 	if err != nil {
 		return nil, status.Errorf(
