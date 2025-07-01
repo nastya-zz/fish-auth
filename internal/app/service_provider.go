@@ -8,6 +8,7 @@ import (
 	"auth/internal/client/db/pg"
 	"auth/internal/closer"
 	"auth/internal/config"
+	"auth/pkg/logger"
 	"auth/internal/repository"
 	authRepository "auth/internal/repository/auth"
 	eventRepository "auth/internal/repository/event"
@@ -16,7 +17,6 @@ import (
 	eventService "auth/internal/service/event"
 	"auth/internal/transaction"
 	"context"
-	"log"
 )
 
 type serviceProvider struct {
@@ -45,7 +45,7 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	if s.pgConfig == nil {
 		cfg, err := config.NewPGConfig()
 		if err != nil {
-			log.Fatalf("failed to get pg config: %s", err.Error())
+			logger.Fatal("failed to get pg config", "error", err.Error())
 		}
 
 		s.pgConfig = cfg
@@ -58,7 +58,7 @@ func (s *serviceProvider) RMQConfig() config.RMQConfig {
 	if s.rmqConfig == nil {
 		cfg, err := config.NewRMQConfig()
 		if err != nil {
-			log.Fatalf("failed to get rmqConfig : %s", err.Error())
+			logger.Fatal("failed to get rmqConfig", "error", err.Error())
 		}
 
 		s.rmqConfig = cfg
@@ -71,7 +71,7 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	if s.grpcConfig == nil {
 		cfg, err := config.NewGRPCConfig()
 		if err != nil {
-			log.Fatalf("failed to get grpc config: %s", err.Error())
+			logger.Fatal("failed to get grpc config", "error", err.Error())
 		}
 
 		s.grpcConfig = cfg
@@ -84,12 +84,12 @@ func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
 		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
-			log.Fatalf("failed to create db client: %v", err)
+			logger.Fatal("failed to create db client", "error", err)
 		}
 
 		err = cl.DB().Ping(ctx)
 		if err != nil {
-			log.Fatalf("ping error: %s", err.Error())
+			logger.Fatal("ping error", "error", err.Error())
 		}
 		closer.Add(cl.Close)
 
@@ -103,7 +103,7 @@ func (s *serviceProvider) RabbitMQClient(ctx context.Context) broker.ClientMsgBr
 	if s.rmqClient == nil {
 		cl, err := rabbitmq.NewRabbitMQ(ctx, s.RMQConfig().DSN())
 		if err != nil {
-			log.Fatalf("failed to create rmq client: %v", err)
+			logger.Fatal("failed to create rmq client", "error", err)
 		}
 
 		closer.Add(cl.Close)

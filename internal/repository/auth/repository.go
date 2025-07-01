@@ -2,6 +2,7 @@ package auth
 
 import (
 	"auth/internal/client/db"
+	"auth/pkg/logger"
 	"auth/internal/model"
 	"auth/internal/repository"
 	"auth/internal/repository/auth/converter"
@@ -11,7 +12,6 @@ import (
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v4"
-	"log"
 	"time"
 )
 
@@ -91,17 +91,17 @@ func (r repo) Create(ctx context.Context, user *model.CreateUser) (*model.User, 
 		QueryRowContext(ctx, q, args...).
 		Scan(&createdUser.ID, &createdUser.Name, &createdUser.Email, &createdUser.Role, &createdUser.Password, &createdUser.IsVerified, &createdUser.CreatedAt, &createdUser.UpdatedAt, &createdUser.LastLogin, &createdUser.IsBlocked)
 	if err != nil {
-		log.Println(err)
+		logger.Error("error in create user", "error", err)
 		return nil, fmt.Errorf("error in create user %w", err)
 	}
 
-	log.Println("createdUser:", createdUser)
+	logger.Info("user created successfully", "user_id", createdUser.ID, "email", createdUser.Email)
 	return converter.ToUserFromRepo(&createdUser), nil
 }
 
 func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
 	const op = "auth.Update"
-	log.Printf("updating user %+v", updateUser)
+	logger.Info("updating user", "user_id", updateUser.ID, "email", updateUser.Email)
 
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
@@ -126,12 +126,11 @@ func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
 	var id string
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("error in update user with id: %s %d", err, id)
-
-		return fmt.Errorf("cannot update user with id: %d", updateUser.ID)
+		logger.Error("user not found for update", "error", err, "user_id", updateUser.ID)
+		return fmt.Errorf("cannot update user with id: %s", updateUser.ID)
 	}
 	if err != nil {
-		log.Printf("error in update user with id: %s", err)
+		logger.Error("error in update user", "error", err, "user_id", updateUser.ID)
 		return fmt.Errorf("cannot update user %w", err)
 	}
 
@@ -211,12 +210,11 @@ func (r repo) Block(ctx context.Context, id string) error {
 	var deletedId string
 	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&deletedId)
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("error in block user with id: %s %d", err, id)
-
-		return fmt.Errorf("cannot block user with id: %d", id)
+		logger.Error("user not found for blocking", "error", err, "user_id", id)
+		return fmt.Errorf("cannot block user with id: %s", id)
 	}
 	if err != nil {
-		log.Printf("error in block user with id: %s", err)
+		logger.Error("error in block user", "error", err, "user_id", id)
 		return fmt.Errorf("cannot block user %w", err)
 	}
 

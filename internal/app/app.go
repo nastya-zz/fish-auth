@@ -3,12 +3,12 @@ package app
 import (
 	"auth/internal/closer"
 	"auth/internal/config"
+	"auth/pkg/logger"
 	"context"
 	descAuth "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"log"
 	"net"
 	"time"
 )
@@ -87,15 +87,17 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 }
 
 func (a *App) runGRPCServer() error {
-	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
+	logger.Info("GRPC server is running", "address", a.serviceProvider.GRPCConfig().Address())
 
 	list, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().Address())
 	if err != nil {
+		logger.Error("failed to listen", "error", err, "address", a.serviceProvider.GRPCConfig().Address())
 		return err
 	}
 
 	err = a.grpcServer.Serve(list)
 	if err != nil {
+		logger.Error("failed to serve grpc", "error", err)
 		return err
 	}
 
