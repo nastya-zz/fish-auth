@@ -17,9 +17,7 @@ func NewImplementation(authService service.AuthService) *Implementation {
 }
 
 /*
-func (UnimplementedAuthV1Server) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
-}
+
 func (UnimplementedAuthV1Server) Check(context.Context, *CheckRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }

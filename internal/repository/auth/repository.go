@@ -2,11 +2,11 @@ package auth
 
 import (
 	"auth/internal/client/db"
-	"auth/pkg/logger"
 	"auth/internal/model"
 	"auth/internal/repository"
 	"auth/internal/repository/auth/converter"
 	modelRepo "auth/internal/repository/auth/model"
+	"auth/pkg/logger"
 	"context"
 	"errors"
 	"fmt"
@@ -99,23 +99,30 @@ func (r repo) Create(ctx context.Context, user *model.CreateUser) (*model.User, 
 	return converter.ToUserFromRepo(&createdUser), nil
 }
 
-func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
+func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) (*model.UpdateUser, error) {
 	const op = "auth.Update"
 	logger.Info("updating user", "user_id", updateUser.ID, "email", updateUser.Email)
-
+	uuId, _ := model.GetUuid(updateUser.ID)
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Set(updatedAtColumn, time.Now()).
-		Where(sq.Eq{idColumn: updateUser.ID}).
-		Suffix("RETURNING id")
+		Set(isVerifiedColumn, updateUser.IsVerified).
+		Where(sq.Eq{idColumn: uuId}).
+		Suffix("RETURNING id, name, email, is_verified")
 
 	if updateUser.Email != "" {
 		builder = builder.Set(emailColumn, updateUser.Email)
 	}
+	if updateUser.Password != "" {
+		builder = builder.Set(passwordColumn, updateUser.Password)
+	}
+	if updateUser.Name != "" {
+		builder = builder.Set(nameColumn, updateUser.Name)
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return fmt.Errorf("cannot build query user with id: %d", updateUser.ID)
+		return nil, fmt.Errorf("cannot build query user with id: %d", updateUser.ID)
 	}
 
 	q := db.Query{
@@ -123,18 +130,23 @@ func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) error {
 		QueryRaw: query,
 	}
 
-	var id string
-	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
+	var updatedUser modelRepo.UpdateUser
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&updatedUser.ID, &updatedUser.Name, &updatedUser.Email, &updatedUser.IsVerified)
 	if errors.Is(err, pgx.ErrNoRows) {
 		logger.Error("user not found for update", "error", err, "user_id", updateUser.ID)
-		return fmt.Errorf("cannot update user with id: %s", updateUser.ID)
+		return nil, fmt.Errorf("cannot update user with id: %s", updateUser.ID)
 	}
 	if err != nil {
 		logger.Error("error in update user", "error", err, "user_id", updateUser.ID)
-		return fmt.Errorf("cannot update user %w", err)
+		return nil, fmt.Errorf("cannot update user %w", err)
 	}
 
-	return nil
+	return &model.UpdateUser{
+		ID:         updatedUser.ID.String(),
+		Name:       updatedUser.Name,
+		Email:      updatedUser.Email,
+		IsVerified: updatedUser.IsVerified,
+	}, nil
 }
 
 func (r repo) Delete(ctx context.Context, id string) error {
