@@ -22,18 +22,8 @@ func NewBroker(channel *amqp.Channel) service.UserMsgBroker {
 	}
 }
 
-func (s Broker) Created(ctx context.Context, event *model.Event) error {
+func (s Broker) SendEvent(ctx context.Context, event *model.Event) error {
 	return s.publish(ctx, rabbitmq.QueueName, event)
-}
-
-func (s Broker) Deleted(ctx context.Context, event *model.Event) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s Broker) Updated(ctx context.Context, event *model.Event) error {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (s Broker) publish(_ context.Context, routingKey string, event *model.Event) error {

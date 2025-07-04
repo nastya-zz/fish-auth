@@ -16,7 +16,7 @@ const (
 	AccessTokenSecretKey  = "VqvguGiffXILza1f44TWXowDT4zwf03dtXmqWW4SYyE="
 
 	RefreshTokenExpiration = 60 * time.Minute
-	AccessTokenExpiration  = 15 * time.Minute
+	AccessTokenExpiration  = 35 * time.Minute
 )
 
 func GenerateToken(info model.User, secretKey []byte, duration time.Duration) (string, error) {

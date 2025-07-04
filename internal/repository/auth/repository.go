@@ -151,8 +151,8 @@ func (r repo) Update(ctx context.Context, updateUser *model.UpdateUser) (*model.
 
 func (r repo) Delete(ctx context.Context, id string) error {
 	const op = "auth.Delete"
-
-	builder := sq.Delete(tableName).PlaceholderFormat(sq.Dollar).Where(sq.Eq{idColumn: id})
+	uuId, _ := model.GetUuid(id)
+	builder := sq.Delete(tableName).PlaceholderFormat(sq.Dollar).Where(sq.Eq{idColumn: uuId})
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -164,9 +164,9 @@ func (r repo) Delete(ctx context.Context, id string) error {
 		QueryRaw: query,
 	}
 
-	row := r.db.DB().QueryRowContext(ctx, q, args...)
+	row, err := r.db.DB().ExecContext(ctx, q, args...)
 	if row == nil {
-		return fmt.Errorf("cannot delete user with id: %d", id)
+		return fmt.Errorf("cannot delete user with id: %s, err %w", id, err)
 	}
 
 	return nil

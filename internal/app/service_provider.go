@@ -8,7 +8,6 @@ import (
 	"auth/internal/client/db/pg"
 	"auth/internal/closer"
 	"auth/internal/config"
-	"auth/pkg/logger"
 	"auth/internal/repository"
 	authRepository "auth/internal/repository/auth"
 	eventRepository "auth/internal/repository/event"
@@ -16,6 +15,7 @@ import (
 	authService "auth/internal/service/auth"
 	eventService "auth/internal/service/event"
 	"auth/internal/transaction"
+	"auth/pkg/logger"
 	"context"
 )
 
