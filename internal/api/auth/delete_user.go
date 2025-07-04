@@ -4,6 +4,7 @@ import (
 	"auth/internal/model"
 	"auth/internal/utils"
 	errorsMsg "auth/pkg/api-errors-msg"
+	"auth/pkg/logger"
 	"context"
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
@@ -23,7 +24,8 @@ func (i *Implementation) DeleteUser(ctx context.Context, req *desc.BlockUserRequ
 		return nil, status.Errorf(codes.Aborted, strErr)
 	}
 
-	if userId != claims.ID || claims.Role != model.RoleAdmin {
+	if userId != claims.ID && claims.Role != model.RoleAdmin {
+		logger.Info(op, "userId", userId, "claims.ID", claims.ID, "equals", userId == claims.ID)
 		return nil, status.Error(codes.PermissionDenied, errorsMsg.PermissionsDenied)
 	}
 

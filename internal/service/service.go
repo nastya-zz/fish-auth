@@ -8,6 +8,7 @@ import (
 
 type AuthService interface {
 	GetUser(ctx context.Context, id string) (*model.User, error)
+	UpdateUser(ctx context.Context, user *model.UpdateUser) (*model.UpdateUser, error)
 	Login(ctx context.Context, login string, password string) (string, error)
 	GetAccessToken(ctx context.Context, claims *model.UserClaims) (string, error)
 	GetRefreshToken(ctx context.Context, claims *model.UserClaims) (string, error)
@@ -23,9 +24,7 @@ type ProcessEvent interface {
 }
 
 type UserMsgBroker interface {
-	Created(ctx context.Context, event *model.Event) error
-	Deleted(ctx context.Context, event *model.Event) error
-	Updated(ctx context.Context, event *model.Event) error
+	SendEvent(ctx context.Context, event *model.Event) error
 }
 
 type EventService interface {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+
 	"github.com/jackc/pgconn"
 
 	"github.com/jackc/pgx/v4"
@@ -46,6 +47,8 @@ type NamedExecer interface {
 }
 
 // QueryExecer интерфейс для работы с обычными запросами
+// Сделано приватным для предотвращения утечек соединений
+// QueryRowContext оставлен публичным, так как не требует rows.Close()
 type QueryExecer interface {
 	ExecContext(ctx context.Context, q Query, args ...interface{}) (pgconn.CommandTag, error)
 	QueryContext(ctx context.Context, q Query, args ...interface{}) (pgx.Rows, error)

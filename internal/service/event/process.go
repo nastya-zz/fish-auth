@@ -47,7 +47,7 @@ func (s *Sender) SendMessage(ctx context.Context, events []*model.Event) {
 	for _, event := range events {
 		logger.Info("sending message", "event", event, "op", op)
 
-		err := s.broker.Created(ctx, event)
+		err := s.broker.SendEvent(ctx, event)
 		if err != nil {
 			logger.Error("failed to send message", "error", err, "op", op)
 		}

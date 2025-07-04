@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -26,7 +27,8 @@ type CreateUser struct {
 }
 
 type UpdateUser struct {
-	Name  string
-	Email string
-	ID    string
+	ID         uuid.UUID `db:"id"`
+	Name       string    `db:"name"`
+	Email      string    `db:"email"`
+	IsVerified bool      `db:"isVerified"`
 }

@@ -25,3 +25,13 @@ func ToCreateUserFromDesc(createUser *desc.UserInfo) *model.CreateUser {
 		Role:     RoleFromDesc(int(createUser.Role)),
 	}
 }
+
+func ToUpdateUserFromDesc(id string, updateUser *desc.UserInfo) *model.UpdateUser {
+	return &model.UpdateUser{
+		ID:         id,
+		Email:      updateUser.Email,
+		Password:   updateUser.Password,
+		Name:       updateUser.Name,
+		IsVerified: updateUser.IsVerified,
+	}
+}
