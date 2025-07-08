@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"auth/internal/repository/auth/converter"
 	apierrors "auth/pkg/api-errors-msg"
 	service_errors "auth/pkg/service-errors"
 	"context"
@@ -19,7 +20,7 @@ func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*de
 		return nil, status.Error(codes.InvalidArgument, apierrors.AuthInvalidParams)
 	}
 
-	token, err := i.authService.Login(ctx, email, password)
+	token, role, err := i.authService.Login(ctx, email, password)
 	if err != nil {
 		parsedErr := getError(err)
 		return nil, status.Errorf(codes.Aborted, parsedErr)
@@ -27,6 +28,7 @@ func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*de
 
 	return &desc.LoginResponse{
 		RefreshToken: token,
+		Role:         converter.DescRole(role),
 	}, nil
 }
 

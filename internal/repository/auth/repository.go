@@ -10,9 +10,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	pgx "github.com/jackc/pgx/v4"
-	"time"
 )
 
 const (
@@ -228,6 +229,37 @@ func (r repo) Block(ctx context.Context, id string) error {
 	if err != nil {
 		logger.Error("error in block user", "error", err, "user_id", id)
 		return fmt.Errorf("cannot block user %w", err)
+	}
+
+	return nil
+}
+func (r repo) UpdateRole(ctx context.Context, id, role string) error {
+	const op = "auth.repository.UpdateRole"
+
+	builder := sq.Update(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Set(roleColumn, role).
+		Where(sq.Eq{idColumn: id}).Suffix("RETURNING id")
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	q := db.Query{
+		Name:     op,
+		QueryRaw: query,
+	}
+
+	var deletedId string
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&deletedId)
+	if errors.Is(err, pgx.ErrNoRows) {
+		logger.Error("user not found for update role", "error", err, "user_id", id)
+		return fmt.Errorf("cannot update role user with id: %s", id)
+	}
+	if err != nil {
+		logger.Error("cannot update role user with id", "error", err, "user_id", id)
+		return fmt.Errorf("cannot update role user with id %w", err)
 	}
 
 	return nil

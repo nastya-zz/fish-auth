@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/joho/godotenv v1.5.1
-	github.com/nastya-zz/fisher-protocols v0.0.14
+	github.com/nastya-zz/fisher-protocols v0.0.15
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	golang.org/x/crypto v0.37.0

@@ -3,6 +3,7 @@ package converter
 import (
 	"auth/internal/model"
 	"database/sql"
+	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"time"
 )
 import modelRepo "auth/internal/repository/auth/model"
@@ -28,4 +29,15 @@ func timeConvert(sourceTime sql.NullTime) time.Time {
 	} else {
 		return sourceTime.Time
 	}
+}
+
+func DescRole(r string) desc.Role {
+	switch r {
+	case model.RoleAdmin:
+		return desc.Role_ADMIN
+	case model.RoleUser:
+		return desc.Role_USER
+	}
+
+	return desc.Role_USER
 }
