@@ -16,6 +16,10 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to init app", "error", err.Error())
 	}
+	if a == nil {
+		logger.Fatal("failed to init app")
+		return
+	}
 
 	err = a.Run(ctx)
 	if err != nil {

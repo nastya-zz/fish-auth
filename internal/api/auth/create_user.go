@@ -2,13 +2,14 @@ package auth
 
 import (
 	"auth/internal/converter"
-	"auth/pkg/logger"
 	errorsMsg "auth/pkg/api-errors-msg"
+	"auth/pkg/logger"
 	"context"
+	"strings"
+
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 )
 
 func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserRequest) (*desc.CreateUserResponse, error) {
@@ -18,7 +19,7 @@ func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserReq
 	if len(errors) > 0 {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
-			strings.Join(errors, ", "))
+			"%s", strings.Join(errors, ", "))
 	}
 	preparedUser := converter.ToCreateUserFromDesc(req.GetUserInfo())
 
@@ -29,7 +30,7 @@ func (i *Implementation) CreateUser(ctx context.Context, req *desc.CreateUserReq
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
-			errorsMsg.UserCreationFailed)
+			"%s", errorsMsg.UserCreationFailed)
 
 	}
 

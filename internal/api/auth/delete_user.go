@@ -6,6 +6,7 @@ import (
 	errorsMsg "auth/pkg/api-errors-msg"
 	"auth/pkg/logger"
 	"context"
+
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,7 +22,7 @@ func (i *Implementation) DeleteUser(ctx context.Context, req *desc.BlockUserRequ
 
 	claims, strErr := utils.GetClaims(ctx)
 	if strErr != "" {
-		return nil, status.Errorf(codes.Aborted, strErr)
+		return nil, status.Errorf(codes.Aborted, "%s", strErr)
 	}
 
 	if userId != claims.ID && claims.Role != model.RoleAdmin {

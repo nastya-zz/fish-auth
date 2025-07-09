@@ -20,7 +20,7 @@ func (i *Implementation) BlockUser(ctx context.Context, req *desc.BlockUserReque
 
 	claims, strErr := utils.GetClaims(ctx)
 	if strErr != "" {
-		return nil, status.Errorf(codes.Aborted, strErr)
+		return nil, status.Errorf(codes.Aborted, "%s", strErr)
 	}
 
 	if claims.Role != model.RoleAdmin {

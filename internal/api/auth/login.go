@@ -23,7 +23,7 @@ func (i *Implementation) Login(ctx context.Context, req *desc.LoginRequest) (*de
 	token, role, err := i.authService.Login(ctx, email, password)
 	if err != nil {
 		parsedErr := getError(err)
-		return nil, status.Errorf(codes.Aborted, parsedErr)
+		return nil, status.Errorf(codes.Aborted, "%s", parsedErr)
 	}
 
 	return &desc.LoginResponse{
