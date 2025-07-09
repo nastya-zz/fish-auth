@@ -17,15 +17,11 @@ func NewImplementation(authService service.AuthService) *Implementation {
 }
 
 /*
+TODO:
+ - реализовать проверку токенов для сторонних сервисов
+ - реализовать провероку доступов до сервисов исходя из ролевой модели
 
 func (UnimplementedAuthV1Server) Check(context.Context, *CheckRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
-}
-
-func (UnimplementedAuthV1Server) DeleteUser(context.Context, *BlockUserRequest) (*BlockUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
-}
-func (UnimplementedAuthV1Server) UpdateUserRole(context.Context, *UpdateUserRoleRequest) (*UpdateUserRoleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserRole not implemented")
 }
 */
