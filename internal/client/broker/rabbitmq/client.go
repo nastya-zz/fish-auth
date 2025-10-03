@@ -3,11 +3,13 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 const (
-	QueueName = "user"
+	ExchangeName = "user_events"
+	QueueName    = "user"
 )
 
 type RabbitMQ struct {
@@ -27,10 +29,17 @@ func NewRabbitMQ(ctx context.Context, url string) (*RabbitMQ, error) {
 		return nil, fmt.Errorf("error connection %s: %w", "conn.Channel", err)
 	}
 
-	_, err = channel.QueueDeclare(QueueName, true, false, false, false, nil)
-
+	err = channel.ExchangeDeclare(
+		ExchangeName,
+		"fanout",
+		true,  // durable
+		false, // auto-deleted
+		false, // internal
+		false, // no-wait
+		nil,   // arguments
+	)
 	if err != nil {
-		return nil, fmt.Errorf("error create queue  %s: %w", "ch.QueueDeclare", err)
+		return nil, fmt.Errorf("error declaring exchange %s: %w", "ch.ExchangeDeclare", err)
 	}
 
 	if err = channel.Qos(
