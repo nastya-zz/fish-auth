@@ -27,7 +27,8 @@ services:
       - "${PG_PORT}:5432"
     volumes:
       - postgres_volume:/var/lib/postgresql/data
-
+    restart: always
+    
   migrator:
     build:
       context: .
@@ -35,3 +36,21 @@ services:
     restart: on-failure
     environment:
       DB_HOST: pg
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    environment:
+      DB_HOST: pg
+      RMQ_HOST: rabbitmq
+      PG_DSN: "postgres://${PG_USER}:${PG_PASSWORD}@pg:5432/${PG_DATABASE_NAME}?sslmode=disable"
+      RMQ_DSN: "amqp://${RMQ_USER}:${RMQ_PASSWORD}@rabbitmq:5672/"
+      GRPC_HOST: "${GRPC_HOST}"
+      GRPC_PORT: "${GRPC_PORT}"
+    depends_on:
+      - pg
+      - rabbitmq
