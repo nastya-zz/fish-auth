@@ -9,13 +9,19 @@ import (
 
 	"auth/internal/utils"
 	errorsMsg "auth/pkg/api-errors-msg"
+	"auth/pkg/logger"
 )
 
 func (i *Implementation) ValidateToken(ctx context.Context, req *desc.ValidateTokenRequest) (*desc.ValidateTokenResponse, error) {
-	claims, err := utils.VerifyToken(req.GetToken(), []byte(utils.RefreshTokenSecretKey))
+	logger.Info("ValidateToken", "token", req.GetToken())
+
+	claims, err := utils.VerifyToken(req.GetToken(), []byte(utils.AccessTokenSecretKey))
 	if err != nil {
+		logger.Error("Error verifying token", "error", err)
 		return nil, status.Errorf(codes.Aborted, errorsMsg.AuthInvalidRefreshToken)
 	}
+
+	logger.Info("Claims", "claims", claims)
 
 	return &desc.ValidateTokenResponse{Claims: &desc.Claims{
 		Id:   claims.ID,

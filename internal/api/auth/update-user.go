@@ -1,13 +1,15 @@
 package auth
 
 import (
-	"auth/internal/converter"
-	errorsMsg "auth/pkg/api-errors-msg"
 	"context"
+	"strings"
+
 	desc "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
+
+	"auth/internal/converter"
+	errorsMsg "auth/pkg/api-errors-msg"
 )
 
 func (i *Implementation) UpdateUser(ctx context.Context, req *desc.UpdateUserRequest) (*desc.UpdateUserResponse, error) {

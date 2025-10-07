@@ -1,16 +1,19 @@
 package app
 
 import (
-	"auth/internal/closer"
-	"auth/internal/config"
-	"auth/pkg/logger"
 	"context"
+	"net"
+	"time"
+
 	descAuth "github.com/nastya-zz/fisher-protocols/gen/auth_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"net"
-	"time"
+
+	"auth/internal/closer"
+	"auth/internal/config"
+	"auth/internal/utils"
+	"auth/pkg/logger"
 )
 
 type App struct {
@@ -39,6 +42,9 @@ func (a *App) Run(ctx context.Context) error {
 		closer.CloseAll()
 		closer.Wait()
 	}()
+
+	// janitor очистки отозванных токенов
+	utils.StartRevokedTokensJanitor(ctx, 35*time.Minute)
 
 	a.runEventSender(ctx)
 

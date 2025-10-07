@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"context"
+	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -19,6 +21,35 @@ const (
 	AccessTokenExpiration  = 35 * time.Minute
 )
 
+// revokedTokens хранит отозванные токены до момента их естественного истечения срока действия.
+// key: исходная строка токена, value: unix-время истечения токена
+var revokedTokens sync.Map
+
+// RevokeToken добавляет токен в список отозванных до указанного времени истечения.
+func RevokeToken(tokenStr string, expiresAt int64) {
+	if tokenStr == "" || expiresAt == 0 {
+		return
+	}
+	revokedTokens.Store(tokenStr, expiresAt)
+}
+
+// IsTokenRevoked проверяет, отозван ли токен. Автоматически очищает просроченные записи.
+func IsTokenRevoked(tokenStr string) bool {
+	v, ok := revokedTokens.Load(tokenStr)
+	if !ok {
+		return false
+	}
+
+	exp, _ := v.(int64)
+	now := time.Now().Unix()
+	if now >= exp {
+		// истёк — убираем из списка, не считаем отозванным далее
+		revokedTokens.Delete(tokenStr)
+		return false
+	}
+	return true
+}
+
 func GenerateToken(info model.User, secretKey []byte, duration time.Duration) (string, error) {
 	claims := model.UserClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -35,6 +66,9 @@ func GenerateToken(info model.User, secretKey []byte, duration time.Duration) (s
 }
 
 func VerifyToken(tokenStr string, secretKey []byte) (*model.UserClaims, error) {
+	if IsTokenRevoked(tokenStr) {
+		return nil, errors.Errorf("token revoked")
+	}
 	token, err := jwt.ParseWithClaims(
 		tokenStr,
 		&model.UserClaims{},
@@ -56,5 +90,36 @@ func VerifyToken(tokenStr string, secretKey []byte) (*model.UserClaims, error) {
 		return nil, errors.Errorf("invalid token claims")
 	}
 
+	if IsTokenRevoked(tokenStr) {
+		return nil, errors.Errorf("token revoked")
+	}
+
 	return claims, nil
+}
+
+// StartRevokedTokensJanitor запускает фоновую очистку просроченных записей revokedTokens.
+func StartRevokedTokensJanitor(ctx context.Context, sweepInterval time.Duration) {
+	if sweepInterval <= 0 {
+		sweepInterval = 5 * time.Minute
+	}
+
+	ticker := time.NewTicker(sweepInterval)
+	go func() {
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				now := time.Now().Unix()
+				revokedTokens.Range(func(key, value interface{}) bool {
+					exp, ok := value.(int64)
+					if !ok || now >= exp {
+						revokedTokens.Delete(key)
+					}
+					return true
+				})
+			}
+		}
+	}()
 }
