@@ -14,8 +14,6 @@ import (
 	"auth/pkg/logger"
 )
 
-//todo: добавить инвалидацию refresh токена
-
 func (i *Implementation) Logout(ctx context.Context, req *desc.LogoutRequest) (*desc.LogoutResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -32,14 +30,22 @@ func (i *Implementation) Logout(ctx context.Context, req *desc.LogoutRequest) (*
 	}
 
 	tokenStr := strings.TrimPrefix(authHeader[0], utils.AuthPrefix)
-	logger.Info("Logout", "token", tokenStr)
+	refreshToken := req.GetRefreshToken()
+
+	logger.Info("Logout", "accesstoken", tokenStr, "refreshToken", refreshToken)
 
 	claims, err := utils.VerifyToken(tokenStr, []byte(utils.AccessTokenSecretKey))
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, errorsMsg.AuthInvalidAccessToken)
 	}
 
+	claimsRefresh, err := utils.VerifyToken(refreshToken, []byte(utils.RefreshTokenSecretKey))
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, errorsMsg.AuthInvalidRefreshToken)
+	}
+
 	utils.RevokeToken(tokenStr, claims.ExpiresAt)
+	utils.RevokeToken(refreshToken, claimsRefresh.ExpiresAt)
 	return &desc.LogoutResponse{
 		Success: true,
 	}, nil
