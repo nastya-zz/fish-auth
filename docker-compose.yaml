@@ -4,19 +4,6 @@ volumes:
   postgres_volume:
 
 services:
-  rabbitmq:
-    image: rabbitmq:3.10.7-management
-    ports:
-      - "${RMQ_PORT_MANAGEMENT}:15672"
-      - "5672:5672"
-    hostname: rabbitmq
-    restart: always
-    environment:
-            - "RABBITMQ_DEFAULT_USER=${RMQ_USER}"
-            - "RABBITMQ_DEFAULT_PASS=${RMQ_PASSWORD}"
-            - "RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648"
-    volumes:
-      - ./rabbitmq:/var/lib/rabbitmq
   pg:
     image: postgres:14-alpine3.17
     environment:
@@ -48,9 +35,9 @@ services:
       DB_HOST: pg
       RMQ_HOST: rabbitmq
       PG_DSN: "postgres://${PG_USER}:${PG_PASSWORD}@pg:5432/${PG_DATABASE_NAME}?sslmode=disable"
-      RMQ_DSN: "amqp://${RMQ_USER}:${RMQ_PASSWORD}@rabbitmq:5672/"
+      RMQ_DSN: "amqp://${RMQ_USER}:${RMQ_PASSWORD}@${RMQ_HOST}:5672/"
       GRPC_HOST: "${GRPC_HOST}"
       GRPC_PORT: "${GRPC_PORT}"
     depends_on:
       - pg
-      - rabbitmq
+     
